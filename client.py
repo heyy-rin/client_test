@@ -22,6 +22,17 @@ import numpy as np
 import argparse
 import imutils
 
+count = 0
+#socket 수신 버퍼를 읽어서 반환하는 함수
+def recvall(sock, count):
+    buf = b''
+    while count:
+        newbuf = sock.recv(count)
+        if not newbuf: return None
+        buf += newbuf
+        count -= len(newbuf)
+    return buf
+
 # return : camera 객체
 # 카메라가 정상적으로 작동하는지 확인함
 def openCamera() :
@@ -43,25 +54,7 @@ def openCamera() :
 # 이미지 전송 후 전송된 이미지 배열을 반환
 def sendImage(frame) :
 
-    # 추출한 이미지를 String 형태로 변환(인코딩)시키는 과정
-    encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
-    result, imgencode = cv2.imencode('.jpg', frame, encode_param)
-    data = numpy.array(imgencode)
-    stringData = data.tostring()
 
-    # 추출한 이미지를 String 형태로 변환(인코딩)시키는 과정
-    encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
-    result, imgencode = cv2.imencode('.jpg', frame, encode_param)
-    data = numpy.array(imgencode)
-    stringData = data.tostring()
-
-    # 보내는 데이터 확인
-    print("stringData :", stringData)
-
-    # 데이터 전송
-    sock.send( str(len(stringData)).ljust(16).encode()); # 이미지 크기 먼저 저송
-    sock.send( stringData );    # 이미지 배열 전송
-    time.sleep(0.1) # 전송속도가 너무 빠르면 안됨!
 
     return data;
 
@@ -90,8 +83,10 @@ net = cv2.dnn.readNetFromCaffe(args["prototxt"], args["model"])
 fps = FPS().start()
 
 #연결할 서버(수신단)의 ip주소와 port번호
-#TCP_IP = '172.30.1.1'
-TCP_IP = '10.10.24.117'
+#TCP_IP = '172.30.1.4'
+#TCP_IP = '192.168.0.66'
+
+TCP_IP = '210.115.49.252'
 TCP_PORT = 5001
 
 #송신을 위한 socket 준비
@@ -99,9 +94,11 @@ sock = socket.socket()
 sock.connect((TCP_IP, TCP_PORT))
 
 capture = openCamera()
+
+personCount = 0
+
 while True :
     ret, frame = capture.read()
-
     #
     frame = imutils.resize(frame, width=600)  # window size
 
@@ -133,6 +130,9 @@ while True :
             # draw the prediction on the frame
             label = "{}: {:.2f}%".format(CLASSES[idx], confidence * 100)
             if (CLASSES[idx] == "person"): # 인코딩하기 전에 사람 검출한 뒤 ! 해당되는 이미지만 보내기!
+
+                personCount = personCount + 1
+                print(personCount)
                 cv2.rectangle(frame, (startX, startY), (endX, endY),
                               COLORS[idx], 2)
                 y = startY - 15 if startY - 15 > 15 else startY + 15
@@ -140,9 +140,47 @@ while True :
                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLORS[idx], 2)
 
                 # 전송된 이미지가 원하는 결과였는지 확인하기 위해 client에서 출력
-                data = sendImage(frame)  # 전송된 이미지배열이 저장됨!
-                decimg = cv2.imdecode(data, 1)  # 이미지 배열을 decode
-                cv2.imshow('CLIENT', decimg)  # decode된 이미지를 확인해서 원하는 이미지가 전송되었는지 확인
+                #data = sendImage(frame)  # 전송된 이미지배열이 저장됨!
+
+                if personCount >= 15 :
+
+                    # 추출한 이미지를 String 형태로 변환(인코딩)시키는 과정
+                    encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
+                    result, imgencode = cv2.imencode('.jpg', frame, encode_param)
+                    data = numpy.array(imgencode)
+                    stringData = data.tostring()
+
+                # 보내는 데이터 확인
+                #print("stringData "+ str(count)+ ":" , stringData)
+
+                    # 데이터 전송
+                    sock.send(str(len(stringData)).ljust(16).encode())  # 이미지 크기 먼저 저송
+                    sock.send(stringData)  # 이미지 배열 전송
+                    time.sleep(0.8)  # 전송속도가 너무 빠르면 안됨!
+
+                    time.sleep(7) # 이미지 전송 후 결과 값을 받아오는 시간 기다리기?
+
+                    length = recvall(sock, 16)
+                    # 길이 16의 데이터를 먼저 수신하는 것은 여기에 이미지의 길이를 먼저 받아서 이미지를 받을 때 편리하려고 하는 것이다.
+                    stringData = recvall(sock, int(length))
+                    print("string length", length.decode())  # 받은 이미지 크기를 출력
+
+                    data = numpy.fromstring(stringData, dtype='uint8')
+                    print("data : ")
+                    print(data)
+
+                    decimg = cv2.imdecode(data, 1)
+                    print("data : ", decimg)
+
+                    cv2.imshow('RE', decimg)
+                    cv2.waitKey(0)
+
+            else :
+                personCount = 0
+
+
+                #decimg = cv2.imdecode(data, 1)  # 이미지 배열을 decode
+                #cv2.imshow('CLIENT', decimg)  # decode된 이미지를 확인해서 원하는 이미지가 전송되었는지 확인
 
     # cv2가 저장 또는 중지를 위해 키보드 입력을 기다림
     k = cv2.waitKey(1) & 0xff # stop & save
@@ -154,6 +192,7 @@ while True :
     # update the FPS counter
     fps.update()
     #cv2.destroyAllWindows()
+
 
 #cv2.imwrite('sample.png', frame)
 
