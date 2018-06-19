@@ -154,19 +154,19 @@ while True :
 
                 if personCount >= 6 :
 
-                    # createSocket() # '210.115.49.252'로 가는 socket을 생성
-                    # # 추출한 이미지를 String 형태로 변환(인코딩)시키는 과정
-                    # encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
-                    # result, imgencode = cv2.imencode('.jpg', frame, encode_param)
-                    # data = numpy.array(imgencode)
-                    # stringData = data.tostring()
-                    # # 보내는 데이터 확인
-                    # #print("stringData "+ str(count)+ ":" , stringData)
-                    # # 데이터 전송
-                    # sock.send(str(len(stringData)).ljust(16).encode())  # 이미지 크기 먼저 저송
-                    # sock.send(stringData)  # 이미지 배열 전송
-                    #
-                    # sock.close() # 데이터 전송 후 socket 닫기
+                    createSocket() # '210.115.49.252'로 가는 socket을 생성
+                    # 추출한 이미지를 String 형태로 변환(인코딩)시키는 과정
+                    encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
+                    result, imgencode = cv2.imencode('.jpg', frame, encode_param)
+                    data = numpy.array(imgencode)
+                    stringData = data.tostring()
+                    # 보내는 데이터 확인
+                    #print("stringData "+ str(count)+ ":" , stringData)
+                    # 데이터 전송
+                    sock.send(str(len(stringData)).ljust(16).encode())  # 이미지 크기 먼저 저송
+                    sock.send(stringData)  # 이미지 배열 전송
+
+                    sock.close() # 데이터 전송 후 socket 닫기
                     shutter.play() # 전송 끝내고 찰칵 소리나게
 
                     personCount = 0
