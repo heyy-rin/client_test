@@ -54,8 +54,6 @@ def openCamera() :
 # 이미지 전송 후 전송된 이미지 배열을 반환
 def sendImage(frame) :
 
-
-
     return data;
 
 # construct the argument parse and parse the arguments
@@ -82,22 +80,30 @@ net = cv2.dnn.readNetFromCaffe(args["prototxt"], args["model"])
 # initialize the FPS counter
 fps = FPS().start()
 
-#연결할 서버(수신단)의 ip주소와 port번호
-#TCP_IP = '172.30.1.4'
-#TCP_IP = '192.168.0.66'
+# 송신을 위한 socket을 만들고 sock에 connect
+def createSocket() :
+    # 연결할 서버(수신단)의 ip주소와 port번호
+    #TCP_IP = '172.30.1.4'
+    #TCP_IP =  '192.168.0.66' '210.115.49.252'
+    try :
+        global TCP_IP
+        global TCP_PORT
+        global sock
 
-TCP_IP = '210.115.49.252'
-TCP_PORT = 5001
+        TCP_IP = '192.168.0.66'
+        TCP_PORT = 5001
+        #송신을 위한 socket 준비
+        sock = socket.socket()
+        sock.connect((TCP_IP, TCP_PORT))
 
-#송신을 위한 socket 준비
-sock = socket.socket()
-sock.connect((TCP_IP, TCP_PORT))
+    except socket.error as msg :
+        print("socket create error ! "+ str(msg))
 
 capture = openCamera()
-
 personCount = 0
 
 while True :
+
     ret, frame = capture.read()
     #
     frame = imutils.resize(frame, width=600)  # window size
@@ -144,40 +150,26 @@ while True :
 
                 if personCount >= 15 :
 
+                    createSocket() # '210.115.49.252'로 가는 socket을 생성
                     # 추출한 이미지를 String 형태로 변환(인코딩)시키는 과정
                     encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
                     result, imgencode = cv2.imencode('.jpg', frame, encode_param)
                     data = numpy.array(imgencode)
                     stringData = data.tostring()
-
-                # 보내는 데이터 확인
-                #print("stringData "+ str(count)+ ":" , stringData)
-
+                    # 보내는 데이터 확인
+                    #print("stringData "+ str(count)+ ":" , stringData)
                     # 데이터 전송
                     sock.send(str(len(stringData)).ljust(16).encode())  # 이미지 크기 먼저 저송
                     sock.send(stringData)  # 이미지 배열 전송
-                    time.sleep(0.8)  # 전송속도가 너무 빠르면 안됨!
 
-                    time.sleep(7) # 이미지 전송 후 결과 값을 받아오는 시간 기다리기?
+                    sock.close() # 데이터 전송 후 socket 닫기
+                    personCount = 0
 
-                    length = recvall(sock, 16)
-                    # 길이 16의 데이터를 먼저 수신하는 것은 여기에 이미지의 길이를 먼저 받아서 이미지를 받을 때 편리하려고 하는 것이다.
-                    stringData = recvall(sock, int(length))
-                    print("string length", length.decode())  # 받은 이미지 크기를 출력
-
-                    data = numpy.fromstring(stringData, dtype='uint8')
-                    print("data : ")
-                    print(data)
-
-                    decimg = cv2.imdecode(data, 1)
-                    print("data : ", decimg)
-
-                    cv2.imshow('RE', decimg)
-                    cv2.waitKey(0)
+                    #time.sleep(0.8)  # 전송속도가 너무 빠르면 안됨!
+                    #time.sleep(7) # 이미지 전송 후 결과 값을 받아오는 시간 기다리기? # 되받아오는 시간 필요X
 
             else :
                 personCount = 0
-
 
                 #decimg = cv2.imdecode(data, 1)  # 이미지 배열을 decode
                 #cv2.imshow('CLIENT', decimg)  # decode된 이미지를 확인해서 원하는 이미지가 전송되었는지 확인
