@@ -14,9 +14,7 @@
 
 import socket
 import cv2
-import numpy
 import time
-from imutils.video import VideoStream
 from imutils.video import FPS
 import numpy as np
 import argparse
@@ -141,7 +139,7 @@ while True :
 
                 personCount = personCount + 1
                 print(personCount)
-                if personCount >= 11:
+                if personCount >= 4:
                     peep.play()
                     time.sleep(1)
 
@@ -154,9 +152,8 @@ while True :
                 # 전송된 이미지가 원하는 결과였는지 확인하기 위해 client에서 출력
                 #data = sendImage(frame)  # 전송된 이미지배열이 저장됨!
 
-                if personCount >= 15 :
+                if personCount >= 6 :
 
-                    shutter.play()
                     # createSocket() # '210.115.49.252'로 가는 socket을 생성
                     # # 추출한 이미지를 String 형태로 변환(인코딩)시키는 과정
                     # encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
@@ -170,6 +167,8 @@ while True :
                     # sock.send(stringData)  # 이미지 배열 전송
                     #
                     # sock.close() # 데이터 전송 후 socket 닫기
+                    shutter.play() # 전송 끝내고 찰칵 소리나게
+
                     personCount = 0
 
                     #time.sleep(0.8)  # 전송속도가 너무 빠르면 안됨!
