@@ -21,6 +21,7 @@ from imutils.video import FPS
 import numpy as np
 import argparse
 import imutils
+import pygame
 
 count = 0
 #socket 수신 버퍼를 읽어서 반환하는 함수
@@ -52,9 +53,6 @@ def openCamera() :
 # frame을 이미지 배열로 만들고 인코딩한다
 # 이미지의 크기와 이미지 배열을 분리해서 전송한다
 # 이미지 전송 후 전송된 이미지 배열을 반환
-def sendImage(frame) :
-
-    return data;
 
 # construct the argument parse and parse the arguments
 ap = argparse.ArgumentParser()
@@ -101,6 +99,10 @@ def createSocket() :
 
 capture = openCamera()
 personCount = 0
+pygame.mixer.init()
+
+peep = pygame.mixer.Sound("peep.wav")
+shutter = pygame.mixer.Sound("shutter.wav")
 
 while True :
 
@@ -110,7 +112,7 @@ while True :
 
     # grab the frame dimensions and convert it to a blob
     (h, w) = frame.shape[:2]
-    blob = cv2.dnn.blobFromImage(cv2.resize(frame, (600, 600)), 0.007843, (300, 300), 127.5)
+    blob = cv2.dnn.blobFromImage(cv2.resize(frame, (600, 600)), 0.007843, (300, 300), 127.5) # size조절은 여기서?
 
     # pass the blob through the network and obtain the detections and
     # predictions
@@ -139,6 +141,10 @@ while True :
 
                 personCount = personCount + 1
                 print(personCount)
+                if personCount >= 11:
+                    peep.play()
+                    time.sleep(1)
+
                 cv2.rectangle(frame, (startX, startY), (endX, endY),
                               COLORS[idx], 2)
                 y = startY - 15 if startY - 15 > 15 else startY + 15
@@ -150,6 +156,7 @@ while True :
 
                 if personCount >= 15 :
 
+                    shutter.play()
                     createSocket() # '210.115.49.252'로 가는 socket을 생성
                     # 추출한 이미지를 String 형태로 변환(인코딩)시키는 과정
                     encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
