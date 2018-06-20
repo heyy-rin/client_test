@@ -171,19 +171,32 @@ while True :
                     data = np.array(imgencode)
                     stringData = data.tostring()
                     # 보내는 데이터 확인
-                    #print("stringData "+ str(count)+ ":" , stringData)
+                    # print("stringData "+ str(count)+ ":" , stringData)
                     # 데이터 전송
                     sock.send(str(len(stringData)).ljust(16).encode())  # 이미지 크기 먼저 저송
                     sock.send(stringData)  # 이미지 배열 전송
 
-                    sock.close() # 데이터 전송 후 socket 닫기
-                    shutter.play() # 전송 끝내고 찰칵 소리나게
+                    time.sleep(5)
+
+                    length = recvall(sock, 16)
+                    # 길이 16의 데이터를 먼저 수신하는 것은 여기에 이미지의 길이를
+                    # 먼저 받아서 이미지를 받을 때 편리하려고 하는 것이다.
+                    stringData = recvall(sock, int(length))
+                    print("string length", length.decode())  # 받은 이미지 크기를 출력
+                    data = np.fromstring(stringData, dtype='uint8')
+
+                    sock.close()    # 데이터 전송 후 socket 닫기
+                    shutter.play()      # 전송 끝내고 찰칵 소리나게
+
+                    decimg = cv2.imdecode(data, 1)
+                    cv2.imshow('SERVER@recv', decimg)
+                    cv2.waitKey(1)
 
                     personCount = 0
 
                     #time.sleep(0.8)  # 전송속도가 너무 빠르면 안됨!
                     print("wait command")
-                    command = input() # 이미지 전송 후 결과 값을 받아오는 시간 기다리기? # 되받아오는 시간 필요X
+                    command = input()  # 이미지 전송 후 결과 값을 받아오는 시간 기다리기? # 되받아오는 시간 필요X
                     if(command=='q'):
                         break
                     else:
