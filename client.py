@@ -20,6 +20,7 @@ import numpy as np
 import argparse
 import imutils
 import pygame
+import sys
 
 count = 0
 #socket 수신 버퍼를 읽어서 반환하는 함수
@@ -82,12 +83,9 @@ def createSocket() :
     #TCP_IP = '172.30.1.4'
     #TCP_IP =  '192.168.0.66' '210.115.49.252'
     try :
-        global TCP_IP
-        global TCP_PORT
         global sock
-
-        TCP_IP = '192.168.0.66'
-        TCP_PORT = 5001
+        TCP_IP = '210.115.49.252'
+        TCP_PORT = 5002
         #송신을 위한 socket 준비
         sock = socket.socket()
         sock.connect((TCP_IP, TCP_PORT))
@@ -139,7 +137,7 @@ while True :
 
                 personCount = personCount + 1
                 print(personCount)
-                if personCount >= 4:
+                if personCount >= 3:
                     peep.play()
                     time.sleep(1)
 
@@ -152,13 +150,17 @@ while True :
                 # 전송된 이미지가 원하는 결과였는지 확인하기 위해 client에서 출력
                 #data = sendImage(frame)  # 전송된 이미지배열이 저장됨!
 
-                if personCount >= 6 :
+                if personCount >= 5 :
 
-                    createSocket() # '210.115.49.252'로 가는 socket을 생성
+                    #createSocket() # '210.115.49.252'로 가는 socket을 생성
+                    createSocket()
+
+                    print("connect Success")
+
                     # 추출한 이미지를 String 형태로 변환(인코딩)시키는 과정
                     encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
                     result, imgencode = cv2.imencode('.jpg', frame, encode_param)
-                    data = numpy.array(imgencode)
+                    data = np.array(imgencode)
                     stringData = data.tostring()
                     # 보내는 데이터 확인
                     #print("stringData "+ str(count)+ ":" , stringData)
@@ -172,7 +174,14 @@ while True :
                     personCount = 0
 
                     #time.sleep(0.8)  # 전송속도가 너무 빠르면 안됨!
-                    #time.sleep(7) # 이미지 전송 후 결과 값을 받아오는 시간 기다리기? # 되받아오는 시간 필요X
+                    print("wait command")
+                    command = input() # 이미지 전송 후 결과 값을 받아오는 시간 기다리기? # 되받아오는 시간 필요X
+                    if(command=='q'):
+                        break
+                    else:
+                        sys.stdin.flush()
+                        continue
+
 
             else :
                 personCount = 0
