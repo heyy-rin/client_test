@@ -139,7 +139,8 @@ while True :
 
                 personCount = personCount + 1
                 print(personCount)
-                if personCount >= 1:
+
+                if personCount >= 4:
                     peep.play()
                     time.sleep(1)
 
@@ -149,10 +150,11 @@ while True :
                 cv2.putText(frame, label, (startX, y),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.5, COLORS[idx], 2)
 
+                cv2.imshow("Frame", frame)
                 # 전송된 이미지가 원하는 결과였는지 확인하기 위해 client에서 출력
                 #data = sendImage(frame)  # 전송된 이미지배열이 저장됨!
 
-                if personCount >= 1 :
+                if personCount >= 6 :
 
                     #createSocket() # '210.115.49.252'로 가는 socket을 생성
                     createSocket()
@@ -163,7 +165,7 @@ while True :
 
                     # 추출한 이미지를 String 형태로 변환(인코딩)시키는 과정
                     encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
-                    #result, imgencode = cv2.imencode('.jpg', frame, encode_param)
+                    # result, imgencode = cv2.imencode('.jpg', frame, encode_param)
                     result, imgencode = cv2.imencode('.jpg', raw_frame, encode_param)
 
                     data = np.array(imgencode)
