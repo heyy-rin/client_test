@@ -21,6 +21,7 @@ import argparse
 import imutils
 import pygame
 import sys
+import logging
 
 count = 0
 #socket 수신 버퍼를 읽어서 반환하는 함수
@@ -103,6 +104,7 @@ shutter = pygame.mixer.Sound("shutter.wav")
 while True :
 
     ret, frame = capture.read()
+    raw_frame = frame
     #
     frame = imutils.resize(frame, width=600)  # window size
 
@@ -137,7 +139,7 @@ while True :
 
                 personCount = personCount + 1
                 print(personCount)
-                if personCount >= 3:
+                if personCount >= 1:
                     peep.play()
                     time.sleep(1)
 
@@ -150,16 +152,20 @@ while True :
                 # 전송된 이미지가 원하는 결과였는지 확인하기 위해 client에서 출력
                 #data = sendImage(frame)  # 전송된 이미지배열이 저장됨!
 
-                if personCount >= 5 :
+                if personCount >= 1 :
 
                     #createSocket() # '210.115.49.252'로 가는 socket을 생성
                     createSocket()
 
                     print("connect Success")
 
+                    frame = cv2.imread('sample4.jpg')
+
                     # 추출한 이미지를 String 형태로 변환(인코딩)시키는 과정
                     encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
-                    result, imgencode = cv2.imencode('.jpg', frame, encode_param)
+                    #result, imgencode = cv2.imencode('.jpg', frame, encode_param)
+                    result, imgencode = cv2.imencode('.jpg', raw_frame, encode_param)
+
                     data = np.array(imgencode)
                     stringData = data.tostring()
                     # 보내는 데이터 확인
