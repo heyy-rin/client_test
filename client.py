@@ -140,7 +140,7 @@ while True :
                 personCount = personCount + 1
                 print(personCount)
 
-                if personCount >= 4:
+                if personCount >= 3:
                     peep.play()
                     time.sleep(1)
 
@@ -154,7 +154,7 @@ while True :
                 # 전송된 이미지가 원하는 결과였는지 확인하기 위해 client에서 출력
                 #data = sendImage(frame)  # 전송된 이미지배열이 저장됨!
 
-                if personCount >= 6 :
+                if personCount >= 5 :
 
                     #createSocket() # '210.115.49.252'로 가는 socket을 생성
                     createSocket()
